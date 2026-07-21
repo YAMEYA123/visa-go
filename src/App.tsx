@@ -109,6 +109,6 @@ export default function App() {
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>
     </aside><div className="stage"><div className="canvas-shell" style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setDrag({ x: event.clientX - offsetX / (spec.widthPx / event.currentTarget.clientWidth), y: event.clientY - offsetY / (spec.widthPx / event.currentTarget.clientWidth) }); }} onPointerMove={move} onPointerUp={() => setDrag(null)}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">拖动照片调整位置；自动检测只是初始建议，请人工确认构图。</p></div></section>
     <section className="pending"><div><p className="eyebrow">NEXT DESTINATIONS</p><h2>正在核验的模板</h2></div>{pendingSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>待核验</em></article>)}</section>
-    <footer><span>VISA GO / 0.2</span><p>本工具不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
+    <footer><span>VISA GO / 0.3</span><p>本工具不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
   </main>;
 }

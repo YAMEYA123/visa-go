@@ -41,9 +41,36 @@ export const photoSpecs: PhotoSpec[] = [
     verifiedAt: "2026-07-21",
     source: "https://www.gov.uk/guidance/how-to-take-a-photo-for-a-visa-application-or-permission",
   },
+  {
+    id: "schengen-short-stay-print",
+    name: "短期签证 · 纸质照片",
+    country: "申根",
+    mode: "纸质递交",
+    widthPx: 827,
+    heightPx: 1063,
+    widthMm: 35,
+    heightMm: 45,
+    headRatio: [0.7, 0.8],
+    note: "35 × 45 mm；近期彩色正面照，浅色背景，脸部约占照片高度 70%–80%。递交前请核对受理国要求。",
+    verifiedAt: "2026-07-21",
+    source: "https://home-affairs.ec.europa.eu/document/download/71052552-a6e7-4581-9857-04fb5ace6bc5_en",
+  },
+  {
+    id: "jp-entry-visa-print",
+    name: "入境签证 · 纸质照片",
+    country: "日本",
+    mode: "申请表粘贴",
+    widthPx: 827,
+    heightPx: 1063,
+    widthMm: 35,
+    heightMm: 45,
+    note: "约 45 × 35 mm；正面、脱帽、无背景，通常要求近 6 个月拍摄。请核对所属领区使用的申请表版本。",
+    verifiedAt: "2026-07-21",
+    source: "https://www.mofa.go.jp/j_info/visit/visa/pdfs/application1_k.pdf",
+  },
 ];
 
 export const pendingSpecs = [
-  { country: "申根", detail: "需按受理国与递交渠道核验" },
-  { country: "日本", detail: "需按签证类别与递交机构核验" },
+  { country: "韩国", detail: "下一批：核验签证类别与递交渠道" },
+  { country: "澳大利亚", detail: "下一批：确认是否需要申请人提供照片" },
 ];
