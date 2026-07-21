@@ -1,0 +1,14 @@
+.auto { margin-top: 14px; border: 1px solid var(--ink); background: transparent; color: var(--ink); padding: 9px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.auto:disabled { opacity: .35; cursor: not-allowed; }
+.range small { display: block; margin-top: 8px; color: #687e90; font-size: 10px; line-height: 1.5; }
+.report { border-top: 1px solid var(--line); padding: 20px 0; }
+.report-head { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.report-head span { font: 500 11px "Roboto Mono", monospace; color: #607689; }
+.check { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 7px 0; }
+.check i { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font: 700 10px "Roboto Mono", monospace; font-style: normal; }
+.check.pass i { background: #dceee6; color: #176148; }
+.check.warning i { background: #fff0d8; color: #9c5c00; }
+.check p { margin: 0; }
+.check b, .check small { display: block; }
+.check b { font-size: 12px; }
+.check small { margin-top: 2px; color: #687e90; font-size: 10px; line-height: 1.5; }
