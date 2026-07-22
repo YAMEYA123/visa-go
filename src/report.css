@@ -34,3 +34,4 @@
 .canvas-shell.tool-move:active { cursor: grabbing; }
 .canvas-shell.tool-erase, .canvas-shell.tool-restore { cursor: crosshair; }
 @media (max-width: 820px) { .mask-editor { margin-left: 0; } }
+.pending-note { max-width: 300px; margin: 0; color: #607689; font-size: 12px; line-height: 1.6; }

@@ -123,6 +123,6 @@ export const photoSpecs: PhotoSpec[] = [
   },
 ];
 
-export const pendingSpecs = [
+export const unsupportedSpecs = [
   { country: "澳大利亚", detail: "ImmiAccount 内上传 JPG 并框选；官方未给出统一强制像素" },
 ];

@@ -3,7 +3,7 @@ import { calculateFaceOffset } from "./autoCrop";
 import { getComplianceChecks, type Check } from "./compliance";
 import { encodeJpegToLimit, formatBytes } from "./exportPhoto";
 import { mapPreviewPointToSource, paintMaskPoint, type MaskPatch, type MaskPoint, type MaskTool } from "./maskEditor";
-import { pendingSpecs, photoSpecs } from "./specs";
+import { photoSpecs, unsupportedSpecs } from "./specs";
 import { getQualityChecks, inspectImageQuality } from "./quality";
 import { analyzePhoto, type FaceBounds } from "./vision";
 
@@ -217,7 +217,7 @@ export default function App() {
       {checks.length > 0 && <div className="report"><div className="report-head"><strong>导出检查</strong>{output && <span>{formatBytes(output.size)}</span>}</div>{checks.map((check) => <div className={`check ${check.status}`} key={check.label}><i>{check.status === "pass" ? "✓" : "!"}</i><p><b>{check.label}</b><small>{check.detail}</small></p></div>)}</div>}
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>
     </aside><div className="stage"><div className={`canvas-shell ${brushEnabled ? `tool-${maskTool}` : "tool-move"}`} style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={startPointer} onPointerMove={continuePointer} onPointerUp={endPointer} onPointerCancel={endPointer}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">{brushEnabled ? `${maskTool === "erase" ? "擦除" : "恢复"}模式：在照片边缘涂抹修正蒙版。` : "拖动照片调整位置；自动检测只是初始建议，请人工确认构图。"}</p></div></section>
-    <section className="pending"><div><p className="eyebrow">NEXT DESTINATIONS</p><h2>正在核验的模板</h2></div>{pendingSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>待核验</em></article>)}</section>
+    <section className="pending" aria-label="暂不支持的目的地"><div><p className="eyebrow">UNAVAILABLE TEMPLATES</p><h2>暂不提供固定模板</h2><p className="pending-note">以下是全局说明，与上方当前选择无关。</p></div>{unsupportedSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>暂不支持 · 非当前选择</em></article>)}</section>
     <footer><span>VISA GO / 0.9</span><p>质量检测为本地启发式提示，不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
   </main>;
 }
