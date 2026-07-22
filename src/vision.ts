@@ -7,15 +7,16 @@ let tasksPromise: Promise<{ face: FaceLandmarker; segmenter: ImageSegmenter }> |
 
 async function getTasks() {
   tasksPromise ??= (async () => {
-    const fileset = await FilesetResolver.forVisionTasks("/mediapipe/wasm");
+    const baseUrl = import.meta.env.BASE_URL;
+    const fileset = await FilesetResolver.forVisionTasks(`${baseUrl}mediapipe/wasm`);
     const [face, segmenter] = await Promise.all([
       FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: "/models/face_landmarker.task", delegate: "CPU" },
+        baseOptions: { modelAssetPath: `${baseUrl}models/face_landmarker.task`, delegate: "CPU" },
         runningMode: "IMAGE",
         numFaces: 2,
       }),
       ImageSegmenter.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: "/models/selfie_segmenter.tflite", delegate: "CPU" },
+        baseOptions: { modelAssetPath: `${baseUrl}models/selfie_segmenter.tflite`, delegate: "CPU" },
         runningMode: "IMAGE",
         outputConfidenceMasks: true,
         outputCategoryMask: false,

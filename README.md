@@ -80,6 +80,14 @@ npm run build
 
 Service Worker 仅缓存构建产物、应用图标、MediaPipe 模型和 WASM。用户上传的原图、处理中间画布和 Blob 下载不会写入 Cache Storage。
 
+## GitHub Pages 发布
+
+生产构建产物发布到 `gh-pages` 分支，站点地址为：
+
+`https://yameya123.github.io/visa-go/`
+
+仓库 Settings → Pages 的 Source 需要选择 **Deploy from a branch**，分支选择 `gh-pages` 与根目录 `/ (root)`。构建配置已使用 `/visa-go/` 作为静态资源与 PWA 作用域。
+
 ## 后续计划
 
 1. 增加 6 寸相纸打印排版
