@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { calculateFaceOffset } from "./autoCrop";
-import { getComplianceChecks } from "./compliance";
+import { getComplianceChecks, type Check } from "./compliance";
 import { encodeJpegToLimit, formatBytes } from "./exportPhoto";
 import { mapPreviewPointToSource, paintMaskPoint, type MaskPatch, type MaskPoint, type MaskTool } from "./maskEditor";
 import { pendingSpecs, photoSpecs } from "./specs";
+import { getQualityChecks, inspectImageQuality } from "./quality";
 import { analyzePhoto, type FaceBounds } from "./vision";
 
 const backgrounds = ["#f8f9fb", "#dcecff", "#e8eef2"];
@@ -26,6 +27,7 @@ export default function App() {
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [output, setOutput] = useState<Blob | null>(null);
   const [detectMessage, setDetectMessage] = useState("可手动拖动校正");
+  const [qualityChecks, setQualityChecks] = useState<Check[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const baseMaskRef = useRef<ImageData | null>(null);
   const undoRef = useRef<MaskPatch[][]>([]);
@@ -85,6 +87,7 @@ export default function App() {
     next.onload = async () => {
       setImage(next); setZoom(1); setOffsetX(0); setOffsetY(0);
       setCutout(null); setFace(null); setOutput(null);
+      setQualityChecks([]);
       setMaskTool("move"); setMaskRevision(0); setUndoCount(0);
       baseMaskRef.current = null; undoRef.current = [];
       setDetectMessage("正在本地抠图与识别人脸…");
@@ -94,12 +97,14 @@ export default function App() {
         setCutout(result.cutout);
         baseMaskRef.current = result.cutout.getContext("2d")?.getImageData(0, 0, result.cutout.width, result.cutout.height) ?? null;
         setFace(result.face ?? null);
+        setQualityChecks(getQualityChecks(inspectImageQuality(next), result.faceCount, result.face?.rollDegrees));
         if (result.face) {
           autoCenter(result.face, next);
         } else {
           setDetectMessage("抠图完成，未识别到单张人脸，请手动调整");
         }
       } catch {
+        setQualityChecks(getQualityChecks(inspectImageQuality(next)));
         setRemoveBackground(false);
         setDetectMessage("智能处理不可用，已切换到手动模式");
       }
@@ -197,7 +202,7 @@ export default function App() {
     setMaskRevision((revision) => revision + 1);
   }
 
-  const checks = image ? getComplianceChecks(spec, output?.size) : [];
+  const checks = image ? [...getComplianceChecks(spec, output?.size), ...qualityChecks] : [];
 
   return <main>
     <header className="masthead"><a className="brand" href="#top" aria-label="Visa Go 首页"><span>VG</span> VISA GO</a><p><i className={`network ${online ? "online" : "offline"}`} />{online ? "在线 · 可安装" : "离线模式 · 本地可用"}</p></header>
@@ -213,6 +218,6 @@ export default function App() {
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>
     </aside><div className="stage"><div className={`canvas-shell ${brushEnabled ? `tool-${maskTool}` : "tool-move"}`} style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={startPointer} onPointerMove={continuePointer} onPointerUp={endPointer} onPointerCancel={endPointer}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">{brushEnabled ? `${maskTool === "erase" ? "擦除" : "恢复"}模式：在照片边缘涂抹修正蒙版。` : "拖动照片调整位置；自动检测只是初始建议，请人工确认构图。"}</p></div></section>
     <section className="pending"><div><p className="eyebrow">NEXT DESTINATIONS</p><h2>正在核验的模板</h2></div>{pendingSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>待核验</em></article>)}</section>
-    <footer><span>VISA GO / 0.8</span><p>本工具不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
+    <footer><span>VISA GO / 0.9</span><p>质量检测为本地启发式提示，不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
   </main>;
 }

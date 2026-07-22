@@ -1,7 +1,7 @@
 import { FaceLandmarker, FilesetResolver, ImageSegmenter } from "@mediapipe/tasks-vision";
 
-export type FaceBounds = { left: number; top: number; right: number; bottom: number };
-export type VisionResult = { cutout: HTMLCanvasElement; face?: FaceBounds };
+export type FaceBounds = { left: number; top: number; right: number; bottom: number; rollDegrees?: number };
+export type VisionResult = { cutout: HTMLCanvasElement; faceCount: number; face?: FaceBounds };
 
 let tasksPromise: Promise<{ face: FaceLandmarker; segmenter: ImageSegmenter }> | undefined;
 
@@ -59,16 +59,20 @@ export async function analyzePhoto(image: HTMLImageElement): Promise<VisionResul
   mask.close();
 
   const faces = face.detect(image).faceLandmarks;
-  if (faces.length !== 1) return { cutout };
+  if (faces.length !== 1) return { cutout, faceCount: faces.length };
   const xs = faces[0].map((point) => point.x);
   const ys = faces[0].map((point) => point.y);
+  const leftEye = faces[0][33];
+  const rightEye = faces[0][263];
   return {
     cutout,
+    faceCount: 1,
     face: {
       left: Math.min(...xs),
       top: Math.min(...ys),
       right: Math.max(...xs),
       bottom: Math.max(...ys),
+      rollDegrees: Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 180 / Math.PI,
     },
   };
 }
