@@ -27,6 +27,7 @@ export default function App() {
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [output, setOutput] = useState<Blob | null>(null);
   const [detectMessage, setDetectMessage] = useState("可手动拖动校正");
+  const [processingPhoto, setProcessingPhoto] = useState(false);
   const [qualityChecks, setQualityChecks] = useState<Check[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const baseMaskRef = useRef<ImageData | null>(null);
@@ -87,6 +88,7 @@ export default function App() {
     next.onload = async () => {
       setImage(next); setZoom(1); setOffsetX(0); setOffsetY(0);
       setCutout(null); setFace(null); setOutput(null);
+      setRemoveBackground(true); setProcessingPhoto(true);
       setQualityChecks([]);
       setMaskTool("move"); setMaskRevision(0); setUndoCount(0);
       baseMaskRef.current = null; undoRef.current = [];
@@ -107,6 +109,8 @@ export default function App() {
         setQualityChecks(getQualityChecks(inspectImageQuality(next)));
         setRemoveBackground(false);
         setDetectMessage("智能处理不可用，已切换到手动模式");
+      } finally {
+        setProcessingPhoto(false);
       }
     };
     next.src = url;
@@ -203,6 +207,15 @@ export default function App() {
   }
 
   const checks = image ? [...getComplianceChecks(spec, output?.size), ...qualityChecks] : [];
+  const cutoutLabel = !backgroundRemovalAllowed
+    ? "该规格禁止换背景"
+    : processingPhoto
+      ? "正在生成蒙版…"
+      : !image
+        ? "上传照片后可用"
+        : cutout
+          ? "自动抠图"
+          : "抠图不可用 · 可手动裁剪";
 
   return <main>
     <header className="masthead"><a className="brand" href="#top" aria-label="Visa Go 首页"><span>VG</span> VISA GO</a><p><i className={`network ${online ? "online" : "offline"}`} />{online ? "在线 · 可安装" : "离线模式 · 本地可用"}</p></header>
@@ -212,7 +225,7 @@ export default function App() {
       <div className="spec-card"><div><strong>{spec.widthPx} × {spec.heightPx} px</strong><small>{spec.mode}</small></div><p>{spec.note}</p><a href={spec.source} target="_blank" rel="noreferrer">官方来源 ↗</a><small>核实于 {spec.verifiedAt}</small></div>
       <div className="step"><span>02</span><div><label htmlFor="file">选择正面照片</label><input id="file" type="file" accept="image/*" onChange={(event) => openFile(event.target.files?.[0])} /></div></div>
       <div className="step"><span>03</span><div className="range"><label htmlFor="zoom">缩放 <b>{zoom.toFixed(2)}×</b></label><input id="zoom" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><button className="auto" disabled={!face} onClick={() => autoCenter()}>自动居中</button><small>{detectMessage}</small></div></div>
-      <div className="backgrounds"><label className="cutout-toggle"><input type="checkbox" checked={backgroundRemovalAllowed && removeBackground} disabled={!cutout || !backgroundRemovalAllowed} onChange={(event) => setRemoveBackground(event.target.checked)} /> {backgroundRemovalAllowed ? "自动抠图" : "该规格禁止换背景"}</label><span>证件照底色</span>{backgrounds.map((color) => <button key={color} style={{ background: color }} aria-label={`底色 ${color}`} disabled={!backgroundRemovalAllowed} className={background === color ? "active" : ""} onClick={() => setBackground(color)} />)}</div>
+      <div className="backgrounds"><label className="cutout-toggle"><input type="checkbox" checked={backgroundRemovalAllowed && removeBackground} disabled={!cutout || !backgroundRemovalAllowed || processingPhoto} onChange={(event) => setRemoveBackground(event.target.checked)} /> {cutoutLabel}</label><span>证件照底色</span>{backgrounds.map((color) => <button key={color} style={{ background: color }} aria-label={`底色 ${color}`} disabled={!backgroundRemovalAllowed} className={background === color ? "active" : ""} onClick={() => setBackground(color)} />)}</div>
       {cutout && backgroundRemovalAllowed && <div className="mask-editor"><div className="mask-title"><strong>蒙版修正</strong><small>最多撤销 10 步</small></div><div className="mask-tools" role="group" aria-label="蒙版工具"><button className={maskTool === "move" ? "active" : ""} onClick={() => setMaskTool("move")}>移动</button><button className={maskTool === "erase" ? "active" : ""} disabled={!removeBackground} onClick={() => setMaskTool("erase")}>擦除</button><button className={maskTool === "restore" ? "active" : ""} disabled={!removeBackground} onClick={() => setMaskTool("restore")}>恢复</button></div><label className="brush-size" htmlFor="brush-size">画笔大小 <b>{brushSize}px</b><input id="brush-size" type="range" min="8" max="100" step="2" value={brushSize} disabled={maskTool === "move" || !removeBackground} onChange={(event) => setBrushSize(Number(event.target.value))} /></label><div className="mask-actions"><button disabled={undoCount === 0} onClick={undoMask}>撤销 ({undoCount})</button><button onClick={resetMask}>重置蒙版</button></div></div>}
       {checks.length > 0 && <div className="report"><div className="report-head"><strong>导出检查</strong>{output && <span>{formatBytes(output.size)}</span>}</div>{checks.map((check) => <div className={`check ${check.status}`} key={check.label}><i>{check.status === "pass" ? "✓" : "!"}</i><p><b>{check.label}</b><small>{check.detail}</small></p></div>)}</div>}
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>

@@ -24,7 +24,12 @@ async function getTasks() {
     ]);
     return { face, segmenter };
   })();
-  return tasksPromise;
+  try {
+    return await tasksPromise;
+  } catch (error) {
+    tasksPromise = undefined;
+    throw error;
+  }
 }
 
 export async function analyzePhoto(image: HTMLImageElement): Promise<VisionResult> {
