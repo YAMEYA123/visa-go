@@ -4,7 +4,7 @@
 
 ## 当前能力
 
-- 预置美国、加拿大、英国、申根和日本签证照片规则
+- 预置美国、加拿大、英国、申根、日本和韩国签证照片规则
 - 支持上传、拖动、缩放、透明图片底色预览与 JPEG 导出
 - 自动压缩到模板文件上限，并显示导出检查报告
 - 浏览器支持原生人脸检测时自动居中，不支持时保留完整手动模式
@@ -47,8 +47,11 @@ npm run build
 | 英国数字签证照片 | 已核实 | 2026-07-21 | [UK Visas and Immigration](https://www.gov.uk/guidance/how-to-take-a-photo-for-a-visa-application-or-permission) |
 | 申根短期签证（纸质） | 已核实 | 2026-07-21 | [European Commission](https://home-affairs.ec.europa.eu/document/download/71052552-a6e7-4581-9857-04fb5ace6bc5_en) |
 | 日本入境签证（纸质） | 已核实 | 2026-07-21 | [Ministry of Foreign Affairs of Japan](https://www.mofa.go.jp/j_info/visit/visa/pdfs/application1_k.pdf) |
+| 韩国入境签证（纸质） | 已核实 | 2026-07-21 | [大韩民国驻广州总领事馆](https://overseas.mofa.go.kr/upload/cntnts/cn-guangzhou-zh/visa_gw.pdf) |
 
 申根递交细节可能因受理国而异；日本驻华不同领区可能提供不同版本申请表。系统会给出通用模板，但递交前仍应核对当地官方要求。
+
+澳大利亚签证通过 ImmiAccount 上传 `JPG` facial image，官方公开说明的文件范围为 70 KB–3.5 MB，并由申请系统提供居中框选；由于没有统一公开的强制像素尺寸，Visa Go 暂不提供一个可能误导用户的固定尺寸模板。
 
 ## 技术方案
 
@@ -60,5 +63,5 @@ npm run build
 ## 后续计划
 
 1. 评估跨浏览器人脸关键点模型，并保留手动校正
-2. 增加韩国、澳大利亚、新西兰、新加坡和印度
+2. 增加新西兰、新加坡和印度；持续跟踪澳大利亚申请系统规则
 3. 增加 PWA 离线缓存；明确排除用户照片缓存

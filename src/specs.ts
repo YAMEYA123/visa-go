@@ -68,9 +68,22 @@ export const photoSpecs: PhotoSpec[] = [
     verifiedAt: "2026-07-21",
     source: "https://www.mofa.go.jp/j_info/visit/visa/pdfs/application1_k.pdf",
   },
+  {
+    id: "kr-entry-visa-print",
+    name: "入境签证 · 纸质照片",
+    country: "韩国",
+    mode: "申请表粘贴",
+    widthPx: 827,
+    heightPx: 1063,
+    widthMm: 35,
+    heightMm: 45,
+    note: "35 × 45 mm；近 6 个月拍摄、正面免冠、白色或近白背景的彩色照片。",
+    verifiedAt: "2026-07-21",
+    source: "https://overseas.mofa.go.kr/upload/cntnts/cn-guangzhou-zh/visa_gw.pdf",
+  },
 ];
 
 export const pendingSpecs = [
-  { country: "韩国", detail: "下一批：核验签证类别与递交渠道" },
-  { country: "澳大利亚", detail: "下一批：确认是否需要申请人提供照片" },
+  { country: "澳大利亚", detail: "ImmiAccount 内上传 JPG 并框选；官方未给出统一强制像素" },
+  { country: "新西兰", detail: "下一批：核验在线申请尺寸与文件限制" },
 ];
