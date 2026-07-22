@@ -8,6 +8,7 @@ import { analyzePhoto, type FaceBounds } from "./vision";
 const backgrounds = ["#f8f9fb", "#dcecff", "#e8eef2"];
 
 export default function App() {
+  const [online, setOnline] = useState(navigator.onLine);
   const [specId, setSpecId] = useState(photoSpecs[0].id);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [cutout, setCutout] = useState<HTMLCanvasElement | null>(null);
@@ -23,6 +24,16 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spec = photoSpecs.find((item) => item.id === specId)!;
   const backgroundRemovalAllowed = spec.allowBackgroundRemoval !== false;
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
 
   const prepareOutput = useCallback(async () => {
     if (!canvasRef.current || !image) return;
@@ -102,7 +113,7 @@ export default function App() {
   const checks = image ? getComplianceChecks(spec, output?.size) : [];
 
   return <main>
-    <header className="masthead"><a className="brand" href="#top" aria-label="Visa Go 首页"><span>VG</span> VISA GO</a><p>照片留在本机 · 无需账户</p></header>
+    <header className="masthead"><a className="brand" href="#top" aria-label="Visa Go 首页"><span>VG</span> VISA GO</a><p><i className={`network ${online ? "online" : "offline"}`} />{online ? "在线 · 可安装" : "离线模式 · 本地可用"}</p></header>
     <section className="intro" id="top"><div><p className="eyebrow">LOCAL PHOTO DESK / 本地照片工作台</p><h1>把签证照，<br />裁到规则里面。</h1></div><p className="lede">选择申请项目，上传一张清晰正面照，在安全框内调整并导出。规则来自官方页面，照片不会离开你的设备。</p></section>
     <section className="workspace"><aside className="controls">
       <div className="step"><span>01</span><div><label htmlFor="spec">申请项目</label><select id="spec" value={specId} onChange={(event) => setSpecId(event.target.value)}>{photoSpecs.map((item) => <option key={item.id} value={item.id}>{item.country} · {item.name}</option>)}</select></div></div>
@@ -114,6 +125,6 @@ export default function App() {
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>
     </aside><div className="stage"><div className="canvas-shell" style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setDrag({ x: event.clientX - offsetX / (spec.widthPx / event.currentTarget.clientWidth), y: event.clientY - offsetY / (spec.widthPx / event.currentTarget.clientWidth) }); }} onPointerMove={move} onPointerUp={() => setDrag(null)}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">拖动照片调整位置；自动检测只是初始建议，请人工确认构图。</p></div></section>
     <section className="pending"><div><p className="eyebrow">NEXT DESTINATIONS</p><h2>正在核验的模板</h2></div>{pendingSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>待核验</em></article>)}</section>
-    <footer><span>VISA GO / 0.6</span><p>本工具不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
+    <footer><span>VISA GO / 0.7</span><p>本工具不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
   </main>;
 }
