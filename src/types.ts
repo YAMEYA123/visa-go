@@ -10,6 +10,7 @@ export type PhotoSpec = {
   minBytes?: number;
   maxBytes?: number;
   headRatio?: [number, number];
+  allowBackgroundRemoval?: boolean;
   note: string;
   verifiedAt: string;
   source: string;

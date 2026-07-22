@@ -15,4 +15,8 @@ describe("photo specifications", () => {
   it("uses unique stable identifiers", () => {
     expect(new Set(photoSpecs.map((spec) => spec.id)).size).toBe(photoSpecs.length);
   });
+
+  it("keeps background removal disabled where official rules prohibit editing", () => {
+    expect(photoSpecs.find((spec) => spec.id === "nz-visa-online")?.allowBackgroundRemoval).toBe(false);
+  });
 });

@@ -4,13 +4,14 @@
 
 ## 当前能力
 
-- 预置美国、加拿大、英国、申根、日本和韩国签证照片规则
+- 预置美国、加拿大、英国、申根、日本、韩国、新西兰、新加坡和印度签证照片规则
 - 支持上传、拖动、缩放、透明图片底色预览与 JPEG 导出
 - 自动压缩到模板文件上限，并显示导出检查报告
-- 浏览器支持原生人脸检测时自动居中，不支持时保留完整手动模式
+- MediaPipe 在本地识别人脸并自动居中，推理失败时保留完整手动模式
 - 内置 MediaPipe 人像分割与人脸关键点模型，普通照片可在本地换底色
 - 每条规格显示状态、官方来源及最后核实日期
 - 纸质照片按 600 DPI 生成像素文件；打印时仍需保持标注的毫米尺寸
+- 规格可禁止背景替换；例如新西兰模板会强制保留原始背景
 
 > Visa Go 只能辅助裁剪和检查确定性规则，不能保证照片被使领馆或签证中心接受。部分机构明确禁止数字修改；请以申请页面的最新要求为准。
 
@@ -50,6 +51,9 @@ npm run build
 | 申根短期签证（纸质） | 已核实 | 2026-07-21 | [European Commission](https://home-affairs.ec.europa.eu/document/download/71052552-a6e7-4581-9857-04fb5ace6bc5_en) |
 | 日本入境签证（纸质） | 已核实 | 2026-07-21 | [Ministry of Foreign Affairs of Japan](https://www.mofa.go.jp/j_info/visit/visa/pdfs/application1_k.pdf) |
 | 韩国入境签证（纸质） | 已核实 | 2026-07-21 | [大韩民国驻广州总领事馆](https://overseas.mofa.go.kr/upload/cntnts/cn-guangzhou-zh/visa_gw.pdf) |
+| 新西兰在线签证 | 已核实 | 2026-07-22 | [Immigration New Zealand](https://www.immigration.govt.nz/process-to-apply/applying-for-a-visa/applying-online/uploading-documents-and-photos/visa-and-nzeta-photos/) |
+| 新加坡入境签证（SAVE） | 已核实 | 2026-07-22 | [Singapore Immigration & Checkpoints Authority](https://www.ica.gov.sg/docs/default-source/ica/files/save-non-pub-ava_sp-user-guide-for-family-visa-application.pdf) |
+| 印度 e-Visa | 已核实 | 2026-07-22 | [India Visa Online](https://indianvisaonline.gov.in/visa/tvoa.html) |
 
 申根递交细节可能因受理国而异；日本驻华不同领区可能提供不同版本申请表。系统会给出通用模板，但递交前仍应核对当地官方要求。
 
@@ -65,6 +69,6 @@ npm run build
 
 ## 后续计划
 
-1. 增加新西兰、新加坡和印度；持续跟踪澳大利亚申请系统规则
-2. 增加 PWA 离线缓存；明确排除用户照片缓存
-3. 增加蒙版手动擦除与恢复，改善复杂发丝和浅色衣物边缘
+1. 增加 PWA 离线缓存；明确排除用户照片缓存
+2. 增加蒙版手动擦除与恢复，改善复杂发丝和浅色衣物边缘
+3. 持续跟踪澳大利亚申请系统与各国规则更新
