@@ -18,3 +18,19 @@
 .network { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #6e8495; }
 .network.online { background: #2b9a70; }
 .network.offline { background: #ed4c3c; }
+.mask-editor { margin: 8px 0 22px 54px; padding: 16px; border: 1px solid var(--line); background: #f4f7f9; }
+.mask-title, .mask-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mask-title small { color: #687e90; font-size: 10px; }
+.mask-tools { display: grid; grid-template-columns: repeat(3, 1fr); margin: 14px 0; }
+.mask-tools button, .mask-actions button { border: 1px solid var(--line); background: white; color: var(--ink); padding: 8px 9px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.mask-tools button + button { border-left: 0; }
+.mask-tools button.active { background: var(--ink); color: white; border-color: var(--ink); }
+.mask-tools button:disabled, .mask-actions button:disabled { opacity: .35; cursor: not-allowed; }
+.brush-size { margin: 0 0 14px; font-size: 11px; }
+.brush-size b { float: right; font-family: "Roboto Mono", monospace; }
+.brush-size input { display: block; width: 100%; margin-top: 9px; accent-color: var(--red); }
+.mask-actions { justify-content: flex-start; }
+.canvas-shell.tool-move { cursor: grab; }
+.canvas-shell.tool-move:active { cursor: grabbing; }
+.canvas-shell.tool-erase, .canvas-shell.tool-restore { cursor: crosshair; }
+@media (max-width: 820px) { .mask-editor { margin-left: 0; } }
