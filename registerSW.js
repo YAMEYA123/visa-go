@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/visa-go/sw.js', { scope: '/visa-go/' })})}
