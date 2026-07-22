@@ -6,6 +6,7 @@ import { mapPreviewPointToSource, paintMaskPoint, type MaskPatch, type MaskPoint
 import { photoSpecs, unsupportedSpecs } from "./specs";
 import { getQualityChecks, inspectImageQuality } from "./quality";
 import { analyzePhoto, type FaceBounds } from "./vision";
+import { clampZoom, zoomAroundPoint } from "./zoomGesture";
 
 const backgrounds = ["#f8f9fb", "#dcecff", "#e8eef2"];
 
@@ -30,11 +31,23 @@ export default function App() {
   const [processingPhoto, setProcessingPhoto] = useState(false);
   const [qualityChecks, setQualityChecks] = useState<Check[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const baseMaskRef = useRef<ImageData | null>(null);
   const undoRef = useRef<MaskPatch[][]>([]);
   const strokeRef = useRef<MaskPatch[]>([]);
   const lastBrushPointRef = useRef<MaskPoint | null>(null);
   const brushingRef = useRef(false);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{
+    distance: number;
+    zoom: number;
+    offsetX: number;
+    offsetY: number;
+    anchorX: number;
+    anchorY: number;
+    midpointX: number;
+    midpointY: number;
+  } | null>(null);
   const spec = photoSpecs.find((item) => item.id === specId)!;
   const backgroundRemovalAllowed = spec.allowBackgroundRemoval !== false;
 
@@ -47,6 +60,24 @@ export default function App() {
       window.removeEventListener("offline", update);
     };
   }, []);
+
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    const handleWheel = (event: WheelEvent) => {
+      if (!image) return;
+      event.preventDefault();
+      const rect = shell.getBoundingClientRect();
+      const anchorX = (event.clientX - rect.left) * spec.widthPx / rect.width;
+      const anchorY = (event.clientY - rect.top) * spec.heightPx / rect.height;
+      const next = zoomAroundPoint(zoom, zoom * Math.exp(-event.deltaY * 0.0015), offsetX, offsetY, anchorX, anchorY, spec.widthPx, spec.heightPx);
+      setZoom(next.zoom);
+      setOffsetX(next.offsetX);
+      setOffsetY(next.offsetY);
+    };
+    shell.addEventListener("wheel", handleWheel, { passive: false });
+    return () => shell.removeEventListener("wheel", handleWheel);
+  }, [image, offsetX, offsetY, spec.heightPx, spec.widthPx, zoom]);
 
   const prepareOutput = useCallback(async () => {
     if (!canvasRef.current || !image) return;
@@ -159,6 +190,25 @@ export default function App() {
 
   function startPointer(event: React.PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size === 2 && maskTool === "move") {
+      const [first, second] = [...pointersRef.current.values()];
+      const rect = event.currentTarget.getBoundingClientRect();
+      const midpointX = (first.x + second.x) / 2;
+      const midpointY = (first.y + second.y) / 2;
+      pinchRef.current = {
+        distance: Math.hypot(second.x - first.x, second.y - first.y),
+        zoom,
+        offsetX,
+        offsetY,
+        anchorX: (midpointX - rect.left) * spec.widthPx / rect.width,
+        anchorY: (midpointY - rect.top) * spec.heightPx / rect.height,
+        midpointX,
+        midpointY,
+      };
+      setDrag(null);
+      return;
+    }
     if (brushEnabled) {
       brushingRef.current = true;
       strokeRef.current = [];
@@ -170,10 +220,26 @@ export default function App() {
   }
 
   function continuePointer(event: React.PointerEvent<HTMLDivElement>) {
+    if (pointersRef.current.has(event.pointerId)) pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinchRef.current && pointersRef.current.size >= 2) {
+      const [first, second] = [...pointersRef.current.values()];
+      const distance = Math.hypot(second.x - first.x, second.y - first.y);
+      const midpointX = (first.x + second.x) / 2;
+      const midpointY = (first.y + second.y) / 2;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const start = pinchRef.current;
+      const next = zoomAroundPoint(start.zoom, start.zoom * distance / Math.max(1, start.distance), start.offsetX, start.offsetY, start.anchorX, start.anchorY, spec.widthPx, spec.heightPx);
+      setZoom(next.zoom);
+      setOffsetX(next.offsetX + (midpointX - start.midpointX) * spec.widthPx / rect.width);
+      setOffsetY(next.offsetY + (midpointY - start.midpointY) * spec.heightPx / rect.height);
+      return;
+    }
     if (brushingRef.current) brush(event); else move(event);
   }
 
-  function endPointer() {
+  function endPointer(event: React.PointerEvent<HTMLDivElement>) {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
     setDrag(null);
     if (!brushingRef.current) return;
     brushingRef.current = false;
@@ -224,12 +290,12 @@ export default function App() {
       <div className="step"><span>01</span><div><label htmlFor="spec">申请项目</label><select id="spec" value={specId} onChange={(event) => setSpecId(event.target.value)}>{photoSpecs.map((item) => <option key={item.id} value={item.id}>{item.country} · {item.name}</option>)}</select></div></div>
       <div className="spec-card"><div><strong>{spec.widthPx} × {spec.heightPx} px</strong><small>{spec.mode}</small></div><p>{spec.note}</p><a href={spec.source} target="_blank" rel="noreferrer">官方来源 ↗</a><small>核实于 {spec.verifiedAt}</small></div>
       <div className="step"><span>02</span><div><label htmlFor="file">选择正面照片</label><input id="file" type="file" accept="image/*" onChange={(event) => openFile(event.target.files?.[0])} /></div></div>
-      <div className="step"><span>03</span><div className="range"><label htmlFor="zoom">缩放 <b>{zoom.toFixed(2)}×</b></label><input id="zoom" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><button className="auto" disabled={!face} onClick={() => autoCenter()}>自动居中</button><small>{detectMessage}</small></div></div>
+      <div className="step"><span>03</span><div className="range"><label htmlFor="zoom">缩放 <b>{zoom.toFixed(2)}×</b></label><input id="zoom" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(clampZoom(Number(event.target.value)))} /><button className="auto" disabled={!face} onClick={() => autoCenter()}>自动居中</button><small>{detectMessage}</small></div></div>
       <div className="backgrounds"><label className="cutout-toggle"><input type="checkbox" checked={backgroundRemovalAllowed && removeBackground} disabled={!cutout || !backgroundRemovalAllowed || processingPhoto} onChange={(event) => setRemoveBackground(event.target.checked)} /> {cutoutLabel}</label><span>证件照底色</span>{backgrounds.map((color) => <button key={color} style={{ background: color }} aria-label={`底色 ${color}`} disabled={!backgroundRemovalAllowed} className={background === color ? "active" : ""} onClick={() => setBackground(color)} />)}</div>
       {cutout && backgroundRemovalAllowed && <div className="mask-editor"><div className="mask-title"><strong>蒙版修正</strong><small>最多撤销 10 步</small></div><div className="mask-tools" role="group" aria-label="蒙版工具"><button className={maskTool === "move" ? "active" : ""} onClick={() => setMaskTool("move")}>移动</button><button className={maskTool === "erase" ? "active" : ""} disabled={!removeBackground} onClick={() => setMaskTool("erase")}>擦除</button><button className={maskTool === "restore" ? "active" : ""} disabled={!removeBackground} onClick={() => setMaskTool("restore")}>恢复</button></div><label className="brush-size" htmlFor="brush-size">画笔大小 <b>{brushSize}px</b><input id="brush-size" type="range" min="8" max="100" step="2" value={brushSize} disabled={maskTool === "move" || !removeBackground} onChange={(event) => setBrushSize(Number(event.target.value))} /></label><div className="mask-actions"><button disabled={undoCount === 0} onClick={undoMask}>撤销 ({undoCount})</button><button onClick={resetMask}>重置蒙版</button></div></div>}
       {checks.length > 0 && <div className="report"><div className="report-head"><strong>导出检查</strong>{output && <span>{formatBytes(output.size)}</span>}</div>{checks.map((check) => <div className={`check ${check.status}`} key={check.label}><i>{check.status === "pass" ? "✓" : "!"}</i><p><b>{check.label}</b><small>{check.detail}</small></p></div>)}</div>}
       <button className="download" disabled={!output} onClick={download}>导出合规尺寸 JPEG <span>→</span></button><p className="privacy">浏览器本地处理。刷新页面后，照片即从页面内存中清除。</p>
-    </aside><div className="stage"><div className={`canvas-shell ${brushEnabled ? `tool-${maskTool}` : "tool-move"}`} style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={startPointer} onPointerMove={continuePointer} onPointerUp={endPointer} onPointerCancel={endPointer}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">{brushEnabled ? `${maskTool === "erase" ? "擦除" : "恢复"}模式：在照片边缘涂抹修正蒙版。` : "拖动照片调整位置；自动检测只是初始建议，请人工确认构图。"}</p></div></section>
+    </aside><div className="stage"><div ref={shellRef} className={`canvas-shell ${brushEnabled ? `tool-${maskTool}` : "tool-move"}`} style={{ aspectRatio: `${spec.widthPx}/${spec.heightPx}` }} onPointerDown={startPointer} onPointerMove={continuePointer} onPointerUp={endPointer} onPointerCancel={endPointer}><canvas ref={canvasRef} />{!image && <div className="empty"><b>上传照片后在这里调整</b><span>支持 JPG、PNG 和手机照片</span></div>}<div className="guide"><i className="eyes" /><i className="chin" /><span>眼睛线</span></div></div><p className="stage-note">{brushEnabled ? `${maskTool === "erase" ? "擦除" : "恢复"}模式：在照片边缘涂抹修正蒙版。` : "拖动调整位置；滚轮、触控板或双指捏合缩放。请人工确认构图。"}</p></div></section>
     <section className="pending" aria-label="暂不支持的目的地"><div><p className="eyebrow">UNAVAILABLE TEMPLATES</p><h2>暂不提供固定模板</h2><p className="pending-note">以下是全局说明，与上方当前选择无关。</p></div>{unsupportedSpecs.map((item) => <article key={item.country}><strong>{item.country}</strong><span>{item.detail}</span><em>暂不支持 · 非当前选择</em></article>)}</section>
     <footer><span>VISA GO / 0.9</span><p>质量检测为本地启发式提示，不代表任何政府或签证机构，最终要求以申请页面为准。</p></footer>
   </main>;
